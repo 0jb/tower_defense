@@ -13,6 +13,8 @@ namespace TD.Gameplay.Path
         public bool DebugPathMesh = false;
         public bool DebugForceRotation = false;
 
+        public PathCell AttachedToPath = null;
+
         [SerializeField]
         private float _pathThickness = 1.0f;
 
@@ -26,6 +28,15 @@ namespace TD.Gameplay.Path
             LookForPathCells();
             FeedPathCellChildren_ParentProperty();
             GenerateNavMeshPath();
+           // SetParentBack();
+        }
+
+        private void SetParentBack()
+        {
+            for(int i = 0; i < pathCells.Count; i++)
+            {
+                pathCells[i].transform.parent = pathCells[i].parentPath.transform;
+            }
         }
 
         private void GenerateNavMeshPath()
@@ -35,6 +46,10 @@ namespace TD.Gameplay.Path
             MeshCollider meshCollider = GetComponent<MeshCollider>();
             meshFilter.mesh = navMeshSource;
             meshCollider.sharedMesh = navMeshSource;
+            if( AttachedToPath )
+            {
+                transform.position = AttachedToPath.transform.position;
+            }
 
             List<Vector3> vertexPos = new List<Vector3>();
             Vector3[] vertices = new Vector3[ pathCells.Count * 2 ];
@@ -71,13 +86,13 @@ namespace TD.Gameplay.Path
                 Vector3 vec1Pos;
 
                 // do better checking
-                if (!pathCells[i].GetComponent<PathMaker>())
+                if (pathCells[i].GetComponent<PathMaker>() && i == 0)
                 {
                     vec0Pos = -pathCells[i].transform.right * (_pathThickness / 2);
-                    vec0Pos += pathCells[i].transform.localPosition;
+                    //vec0Pos += pathCells[i].transform.localPosition;
 
                     vec1Pos = pathCells[i].transform.right * (_pathThickness / 2);
-                    vec1Pos += pathCells[i].transform.localPosition;
+                    //vec1Pos += pathCells[i].transform.localPosition;
                 }
                 else
                 {
@@ -87,10 +102,6 @@ namespace TD.Gameplay.Path
                     vec1Pos = pathCells[i].transform.right * (_pathThickness / 2);
                     vec1Pos += pathCells[i].transform.localPosition;
                 }
-                //vec0Pos += pathCells[i].transform.localPosition;
-
-                //Vector3 vec1Pos = pathCells[i].transform.right * (_pathThickness / 2);
-                //vec1Pos += pathCells[i].transform.localPosition;
 
                 vertexPos.Add(vec0Pos);
                 vertexPos.Add(vec1Pos);
@@ -191,6 +202,10 @@ namespace TD.Gameplay.Path
 
                 pathCells[i].parentPath = this;
             }
+            //for (int i = 0; i < pathCells.Count; i++)
+            //{
+            //    pathCells[i].transform.parent = null;
+            //}
         }
 
         private void DebugPath()
@@ -230,6 +245,7 @@ namespace TD.Gameplay.Path
                 LookForPathCells();
                 FeedPathCellChildren_ParentProperty();
                 GenerateNavMeshPath();
+                SetParentBack();
                 //DebugNow = false;
             }
         }
